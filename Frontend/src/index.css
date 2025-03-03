@@ -19,3 +19,8 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
 }
+
+video{
+  width: 60vw;
+  height: 100vh;
+}

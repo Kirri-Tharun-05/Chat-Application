@@ -1,29 +1,45 @@
 const express = require('express');
 const { createServer } = require('node:http');
-const {Server} = require('socket.io');
-const cors= require('cors');
+const { Server } = require('socket.io');
+const cors = require('cors');
 
 const app = express();
 const server = createServer(app);
 
-const nameToSocketId=new Map();
-const socketIdToName=new Map();
-const io=new Server(server,{
-  cors:true
+const nameToSocketId = new Map();
+const socketIdToName = new Map();
+const io = new Server(server, {
+  cors: true
 });
 
-io.on('connection',(socket)=>{
-  console.log('Socket Connected : ',socket.id);
-  socket.on('room-join',(data)=>{
-    const {name,room} =data;
-    nameToSocketId.set(name,socket.id)
-    socketIdToName.set(socket.id,name)  
+io.on('connection', (socket) => {
+  console.log('Socket Connected : ', socket.id);
+  socket.on('room-join', (data) => {
+    
+    const { name, room } = data;
+    
+    nameToSocketId.set(name, socket.id)
+    
+    socketIdToName.set(socket.id, name)
+    
     console.log(data);
-    io.to(room).emit('user-joined',{name , id:socket.id })
+    
+    io.to(room).emit('user-joined', { name, id: socket.id })
+    
     socket.join(room);
-    io.to(socket.id).emit('room-join',data); 
+    
+    io.to(socket.id).emit('room-join', data);
+    
+    socket.on('user-call', ({ to, offer }) => {
+      io.to(to).emit('incomming-call', { from: socket.id, offer })
+    })
+
+    socket.on('call-accepted', ({ to, ans }) => {
+      io.to(to).emit('call-accepted', { from: socket.id, ans })
+    })
   })
 })
+
 
 app.get('/', (req, res) => {
   res.send('<h1>Hello world</h1>');
